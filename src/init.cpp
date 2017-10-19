@@ -6,7 +6,6 @@
 
 #include "main.h"
 #include "controlLoop.h"
-#include "readUart.h"
 
 extern "C" {
   void __libc_init_array();
@@ -19,6 +18,6 @@ void initializeIO() {
 }
 
 void initialize() {
-  taskCreate((TaskCode)controlLoop, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
-  taskCreate((TaskCode)readUart, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+  taskCreate((TaskCode) controlLoop,
+    TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 }
