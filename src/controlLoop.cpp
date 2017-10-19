@@ -2,23 +2,28 @@
 #include "control/velPid.h"
 #include "device/quadEncoder.h"
 #include "chassis/chassisModel.h"
-#include "writeUart.h"
+
+#include "uart.h"
 
 extern Semaphore velSem;
 extern float leftVelTarget, rightVelTarget;
 
-void controlLoop() {
-	using namespace okapi;
+using namespace okapi;
 
-	QuadEncoder leftEnc(1, 2, true), rightEnc(3, 4);
-	SkidSteerModel<3> model({2_m,3_m,4_m, 5_m,6_m,7_m}, leftEnc, rightEnc);
-	VelPid leftVel(0.3, 0.1), rightVel(0.3, 0.1);
+void controlLoop() {
+	okapi::QuadEncoder leftEnc(1, 2, true), rightEnc(3, 4);
+	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 5_m, 6_m, 7_m}, leftEnc, rightEnc);
+	okapi::VelPid leftVel(0.3, 0.1), rightVel(0.3, 0.1);
 
 	while (1) {
-		semaphoreTake(velSem, 15);
-		leftVel.setTarget(leftVelTarget);
-		rightVel.setTarget(rightVelTarget);
-		semaphoreGive(velSem);
+		uint8_t packet_id = 0;
+		int32_t value = 0;
+
+		readUart(packet_id, value);
+		switch (packet_id) {
+			case 0x1: leftVel.setTarget(value); break;
+			case 0x2: rightVel.setTarget(value); break;
+		}
 
 		leftVel.loop(leftEnc.get());
 		rightVel.loop(rightEnc.get());
@@ -28,6 +33,6 @@ void controlLoop() {
 		writeUart(0xF1, leftEnc.get());
 		writeUart(0xF2, rightEnc.get());
 
-		taskDelay(15);
+		taskDelay(20);
 	}
 }
