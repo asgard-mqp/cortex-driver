@@ -12,7 +12,7 @@ using namespace okapi;
 
 void controlLoop() {
 	okapi::QuadEncoder leftEnc(1, 2, true), rightEnc(3, 4);
-	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 5_m, 6_m, 7_m}, leftEnc, rightEnc);
+	okapi::SkidSteerModel<3> model({1_m, 2_m, 3_m, 7_m, 8_m, 9_m}, leftEnc, rightEnc);
 	okapi::VelPid leftVel(0.3, 0.1), rightVel(0.3, 0.1);
 
 	while (1) {
