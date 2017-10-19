@@ -5,8 +5,7 @@ union Converter {
   uint8_t bytes[4];     // occupies 4 byte
 };  
 
-float leftVelTarget;
-float rightVelTarget;
+float leftVelTarget, rightVelTarget;
 Semaphore velSem = semaphoreCreate();
 
 void readUart() {

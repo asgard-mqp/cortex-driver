@@ -5,8 +5,7 @@
 
 void readUart();
 
-extern float leftVelTarget;
-extern float rightVelTarget;
+extern float leftVelTarget, rightVelTarget;
 extern Semaphore velSem;
 
 #endif

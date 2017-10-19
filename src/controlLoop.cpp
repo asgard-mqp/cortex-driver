@@ -5,6 +5,7 @@
 #include "writeUart.h"
 
 extern Semaphore velSem;
+extern float leftVelTarget, rightVelTarget;
 
 void controlLoop() {
 	using namespace okapi;
@@ -15,8 +16,8 @@ void controlLoop() {
 
 	while (1) {
 		semaphoreTake(velSem, 15);
-		leftVel.setTarget(0);
-		rightVel.setTarget(0);
+		leftVel.setTarget(leftVelTarget);
+		rightVel.setTarget(rightVelTarget);
 		semaphoreGive(velSem);
 
 		leftVel.loop(leftEnc.get());
