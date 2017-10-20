@@ -16,6 +16,8 @@ void controlLoop() {
 
 	float leftVal = 0, rightVal = 0;
 
+	bool joystickMode = false;
+
 	while (1) {
 		uint8_t packet_id = 0;
 		int32_t value = 0;
@@ -33,8 +35,18 @@ void controlLoop() {
 		leftVel.loop(leftEnc.get());
 		rightVel.loop(rightEnc.get());
 
-		// model.tank(leftVel.getOutput(), rightVel.getOutput());
-		model.tank((leftVal/200.0)*127, (rightVal/200.0)*127);
+		if (joystickGetDigital (1, 8, JOY_DOWN))
+			joystickMode = true;
+		else if (joystickGetDigital (1, 8, JOY_UP))
+			joystickMode = false;
+
+		if (joystickMode) {
+			model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2));
+		}
+		else {
+			// model.tank(leftVel.getOutput(), rightVel.getOutput());
+			model.tank((leftVal/200.0)*127, (rightVal/200.0)*127);
+		}
 
 		writeUart(0xF1, leftEnc.get());
 		writeUart(0xF2, rightEnc.get());
