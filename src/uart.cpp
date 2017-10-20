@@ -17,12 +17,18 @@ void writeUart(uint8_t packet_id, int32_t value) {
     fputc(out_data.bytes[i], uart1);
   }
 
+
+  printf("FA:%02x:%02x:%02x:%02x:%02x:%02x\n", packet_id,
+    out_data.bytes[0], out_data.bytes[1], out_data.bytes[2], out_data.bytes[3],
+    checksum);
+
   fputc(checksum, uart1);
 }
 
 void readUart(uint8_t& packet_id, int32_t& value) {
   Converter in_data;
 
+  // printf("checking uart.... %d bytes available\n", fcount(uart1));
   if (fcount(uart1) < 7) {
     return;
   }
@@ -36,6 +42,10 @@ void readUart(uint8_t& packet_id, int32_t& value) {
     checksum_calc -= in_data.bytes[i];
   }
   uint8_t checksum_given = fgetc(uart1);
+
+  printf("%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", startByte, packet_id,
+    in_data.bytes[0], in_data.bytes[1], in_data.bytes[2], in_data.bytes[3],
+    checksum_given);
 
   if (false && checksum_calc == checksum_given) {
     packet_id = 0;
