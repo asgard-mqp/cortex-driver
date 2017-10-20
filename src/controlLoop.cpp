@@ -16,7 +16,7 @@ void controlLoop() {
 
 	float leftVal = 0, rightVal = 0;
 
-	bool joystickMode = false;
+	bool joystickMode = true;
 
 	while (1) {
 		uint8_t packet_id = 0;
@@ -35,21 +35,24 @@ void controlLoop() {
 		leftVel.loop(leftEnc.get());
 		rightVel.loop(rightEnc.get());
 
+		// toggle joystick / jetson control
 		if (joystickGetDigital (1, 8, JOY_DOWN))
 			joystickMode = true;
 		else if (joystickGetDigital (1, 8, JOY_UP))
 			joystickMode = false;
 
 		if (joystickMode) {
-			model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2));
+			model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
 		}
 		else {
 			// model.tank(leftVel.getOutput(), rightVel.getOutput());
 			model.tank((leftVal/200.0)*127, (rightVal/200.0)*127);
 		}
 
-		writeUart(0xF1, leftEnc.get());
-		writeUart(0xF2, rightEnc.get());
+		if (!joystickMode) {
+			writeUart(0xF1, leftEnc.get());
+			writeUart(0xF2, rightEnc.get());
+		}
 
 		taskDelay(15);
 	}
