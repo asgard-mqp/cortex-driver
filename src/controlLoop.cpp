@@ -44,7 +44,11 @@ void controlLoop() {
 		}
 
 		if (joystickMode) {
-			model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
+			if (joystickGetDigital(1, 7, JOY_DOWN)) {
+				model.tank(-40, 40); // if 7D is pressed, spin at a constant speed
+			} else {
+				model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
+			}
 		} else {
 			// model.tank(leftVel.getOutput(), rightVel.getOutput());
 			model.tank((leftVal/200.0)*127, (rightVal/200.0)*127);
@@ -52,6 +56,13 @@ void controlLoop() {
 
 		if (joystickGetDigital(1, 8, JOY_LEFT))
 			uartMode = true;
+
+		// reset button for testing
+		if (joystickGetDigital(1, 8, JOY_RIGHT)) {
+			uartMode = false;
+			leftEnc.reset();
+			rightEnc.reset();
+		}
 
 		if (uartMode) {
 			writeUart(0xF1, leftEnc.get());
