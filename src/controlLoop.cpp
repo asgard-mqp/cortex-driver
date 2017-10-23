@@ -45,7 +45,7 @@ void controlLoop() {
 
 		if (joystickMode) {
 			if (joystickGetDigital(1, 7, JOY_DOWN)) {
-				model.tank(-40, 40); // if 7D is pressed, spin at a constant speed
+				model.tank(-65, 65); // if 7D is pressed, spin at a constant speed
 			} else {
 				model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
 			}
