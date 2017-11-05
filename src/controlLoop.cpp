@@ -13,7 +13,7 @@
 using namespace okapi::literals;
 float kp = 0.025;
 float ki = 0.0;
-float kd = 7;
+float kd = 10;
 void controlLoop() {
 	using namespace std;
 
