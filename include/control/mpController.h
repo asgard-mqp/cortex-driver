@@ -2,6 +2,7 @@
 #define OKAPI_MPCONTROLLER
 
 #include "control/mpConsumer.h"
+#include "control/controlObject.h"
 #include "motionProfile/mpGenerator.h"
 
 namespace okapi {
@@ -17,20 +18,16 @@ namespace okapi {
     const MPConsumerParams& mpConParams;
   };
 
-  class MPController {
+  class MPController : public ControlObject {
   public:
     MPController(const MPGenParams& igenParams, const MPConsumerParams& iconParams):
       mpGen(igenParams),
       mpCon(iconParams),
-      target(0),
-      dt(15),
       profile(mpGen.generateProfile(dt)) {}
 
     MPController(const MPControllerParams& iparams):
       mpGen(iparams.mpGenParams),
       mpCon(iparams.mpConParams),
-      target(0),
-      dt(15),
       profile(mpGen.generateProfile(dt)) {}
 
     virtual ~MPController() {
@@ -40,33 +37,61 @@ namespace okapi {
 
     /**
      * Do one iteration of the controller
-     * @param  inewReading New measurement
-     * @return             Controller output
+     * @param  ireading New measurement
+     * @return          Controller output
      */
-    virtual float loop(const float inewReading) { return mpCon.loop(profile, inewReading); }
+    float step(const float ireading) override {
+      if (isOn) {
+        output = mpCon.step(profile, ireading);
+        
+        //Bound output
+        if (output > max)
+          output = max;
+        else if (output < min)
+         output = min;
+      } else {
+        output = 0; //Controller is off so write 0
+      }
+
+      return output;
+    }
 
     /**
      * Set a new target position and regenerate the motion profile
-     * @param pos New target position
+     * @param itarget New target position
      */
-    void setTarget(const int pos) {
+    void setTarget(const float itarget) override {
       //Don't recalculate to get to the same spot
-      if (pos == target)
+      if (itarget == target)
         return;
 
-      target = pos;
-      mpGen.setTarget(pos);
-      profile = mpGen.generateProfile(dt);
+      target = itarget;
+      mpGen.setTarget(itarget);
+      profile = mpGen.generateProfile(dt); //Have to regen profile with new target
     }
 
-    bool isComplete() const { return mpCon.isComplete(); }
+    float getOutput() const override { return output; }
 
-    void reset() { mpCon.reset(); }
+    void setSampleTime(const int isampleTime) override {
+      dt = isampleTime;
+      profile = mpGen.generateProfile(dt); //Have to regen profile with new dt
+      reset();
+    }
+
+    void setOutputLimits(float imax, float imin) override { max = imax; min = imin; }
+
+    void reset() override { mpCon.reset(); }
+
+    void flipDisable() override { isOn = !isOn; }
+
+    bool isComplete() const { return mpCon.isComplete(); }
   private:
     MPGenerator mpGen;
     MPConsumer mpCon;
-    int target, dt;
     MotionProfile profile;
+    float target = 0, output = 0, max = 127, min = -127;
+    int dt = 0;
+    bool isOn = true;
   };
 }
 
