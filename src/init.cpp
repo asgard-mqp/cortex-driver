@@ -18,6 +18,7 @@ void initializeIO() {
 }
 
 void initialize() {
+  imeInitializeAll();
   taskCreate((TaskCode) controlLoop,
     TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 }
