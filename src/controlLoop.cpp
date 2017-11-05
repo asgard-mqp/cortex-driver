@@ -14,23 +14,17 @@ float kp = 0.025;
 float ki = 0.0;
 float kd = 0.0005;
 void controlLoop() {
-	//okapi::QuadEncoder leftEnc(1, 2, true), rightEnc(3, 4);
-	// okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, leftEnc, rightEnc);
-	const unsigned int leftIME = 0, rightIME = 1;
-	int leftIMEVal = 0, rightIMEVal = 0;
+	okapi::IME leftIME(0), rightIME(1, true);
+	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, leftIME, rightIME);
 	// okapi::Button switchMode(1, 8, JOY_DOWN), uartButton(1, 8, JOY_LEFT);
 	okapi::Pid left(kp, ki, kd), right(kp, ki, kd);
 	okapi::VelMath leftVel(okapi::imeTurboTPR), rightVel(okapi::imeTurboTPR);
 	float leftPower = 0, rightPower = 0;
 
-	//Doesn't work?
-	imeReset(leftIME);
-	imeReset(rightIME);
-
 	writeUart(0xF5, 50505);
 	float leftVal = 0, rightVal = 0;
 	bool joystickMode = true, uartMode = false;
-
+	leftVal = 75;
 	while (1) {
 		uint8_t packet_id = 0;
 		int32_t value = 0;
@@ -53,11 +47,11 @@ void controlLoop() {
 		}
 
 		//Step IME and velocity
-		imeGet(leftIME, &leftIMEVal);
-		imeGet(rightIME, &rightIMEVal);
-		rightIMEVal *= -1;
-		leftVel.step(leftIMEVal);
-		rightVel.step(rightIMEVal);
+		// imeGet(leftIME, &leftIMEVal);
+		// imeGet(rightIME, &rightIMEVal);
+		// rightIMEVal *= -1;
+		leftVel.step(leftIME.get());
+		rightVel.step(rightIME.get());
 
 		//Step PID
 		left.setTarget(leftVal);
@@ -82,8 +76,10 @@ void controlLoop() {
 			joystickMode = true;
 		} else if (joystickGetDigital(1, 8, JOY_UP)) {
 			joystickMode = false;
-			leftIMEVal = 0;
-			rightIMEVal = 0;
+			// leftIMEVal = 0;
+			leftIME.reset();
+			rightIME.reset();
+			// rightIMEVal = 0;
 			left.reset();
 			right.reset();
 			leftPower = 0;
@@ -92,25 +88,15 @@ void controlLoop() {
 
 		if (joystickMode) {
 			if (joystickGetDigital(1, 7, JOY_DOWN)) {
-				// model.tank(-65, 65); // if 7D is pressed, spin at a constant speed
+				model.tank(-65, 65); // if 7D is pressed, spin at a constant speed
 			} else {
-				// model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
+				model.tank(joystickGetAnalog(1, 3), joystickGetAnalog(1, 2), 10);
 			}
-			motorSet(2, joystickGetAnalog(1, 3));
-			motorSet(3, joystickGetAnalog(1, 3));
-			motorSet(4, joystickGetAnalog(1, 3));
-			motorSet(7, joystickGetAnalog(1, 2));
-			motorSet(8, joystickGetAnalog(1, 2));
-			motorSet(9, joystickGetAnalog(1, 2));
 		} else {
 			// model.tank(leftVel.getOutput(), rightVel.getOutput());
 			// model.tank(leftPower, rightPower);
-			motorSet(2, leftPower);
-			motorSet(3, leftPower);
-			motorSet(4, leftPower);
-			motorSet(7, rightPower);
-			motorSet(8, rightPower);
-			motorSet(9, rightPower);
+			model.leftTS(leftPower + 127.0 * leftVal/200.0);
+			model.rightTS(rightPower + 127.0 * rightVal/200.0);
 			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),leftVal-leftVel.getOutput());
 		}
 
@@ -125,8 +111,8 @@ void controlLoop() {
 		}
 
 		if (uartMode) {
-			writeUart(0xF1, leftIMEVal);//leftEnc.get());
-			writeUart(0xF2, rightIMEVal);//rightEnc.get());
+			writeUart(0xF1, leftIME.get());//leftEnc.get());
+			writeUart(0xF2, rightIME.get());//rightEnc.get());
 		}
 
 		taskDelay(15);
