@@ -77,8 +77,7 @@ void controlLoop() {
 		} else if (joystickGetDigital(1, 8, JOY_UP)) {
 			joystickMode = false;
 			// leftIMEVal = 0;
-			leftIME.reset();
-			rightIME.reset();
+			model.resetSensors();
 			// rightIMEVal = 0;
 			left.reset();
 			right.reset();
