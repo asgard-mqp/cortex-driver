@@ -8,22 +8,25 @@
 #include "util/timer.h"
 
 #include "uart.h"
+#include <cmath>
 
 using namespace okapi::literals;
 float kp = 0.025;
 float ki = 0.0;
-float kd = 0.0005;
+float kd = 7;
 void controlLoop() {
+	using namespace std;
+
 	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, okapi::IME(0), okapi::IME(1, true));
 	// okapi::Button switchMode(1, 8, JOY_DOWN), uartButton(1, 8, JOY_LEFT);
 	okapi::Pid left(kp, ki, kd), right(kp, ki, kd);
-	okapi::VelMath leftVel(okapi::imeTurboTPR), rightVel(okapi::imeTurboTPR);
+	okapi::VelMath leftVel(okapi::imeTurboTPR,0.5,0), rightVel(okapi::imeTurboTPR,0.5,0);
 	float leftPower = 0, rightPower = 0;
 
 	writeUart(0xF5, 50505);
 	float leftVal = 0, rightVal = 0;
 	bool joystickMode = true, uartMode = false;
-	leftVal = 500;
+	//leftVal = 50;
 	while (1) {
 		uint8_t packet_id = 0;
 		int32_t value = 0;
@@ -94,8 +97,15 @@ void controlLoop() {
 		} else {
 			// model.tank(leftVel.getOutput(), rightVel.getOutput());
 			// model.tank(leftPower, rightPower);
-			model.leftTS(leftPower + 127.0 * leftVal/200.0);
-			model.rightTS(rightPower + 127.0 * rightVal/200.0);
+			constexpr int deadband = 10;
+			if(fabs(leftPower + 127.0 * leftVal/250.0) > deadband)
+				model.leftTS(leftPower + 127.0 * leftVal/250.0 );
+			else
+				model.leftTS(0);
+			if(fabs(rightPower + 127.0 * rightVal/250.0) > deadband)
+				model.rightTS(rightPower + 127.0 * rightVal/250.0);
+			else
+				model.rightTS(0);
 			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),left.getError());
 		}
 
