@@ -67,7 +67,7 @@ void controlLoop() {
 		else if (rightPower < -127)
 			rightPower = -127;
 		
-		printf("%1.2f,%1.2f\n", leftVel.getOutput(), rightVel.getOutput());
+		// printf("%1.2f,%1.2f\n", leftVel.getOutput(), rightVel.getOutput());
 
 		// toggle joystick / jetson control
 		if (joystickGetDigital(1, 8, JOY_DOWN)) {
