@@ -14,8 +14,7 @@ float kp = 0.025;
 float ki = 0.0;
 float kd = 0.0005;
 void controlLoop() {
-	okapi::IME leftIME(0), rightIME(1, true);
-	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, leftIME, rightIME);
+	okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, okapi::IME(0), okapi::IME(1, true));
 	// okapi::Button switchMode(1, 8, JOY_DOWN), uartButton(1, 8, JOY_LEFT);
 	okapi::Pid left(kp, ki, kd), right(kp, ki, kd);
 	okapi::VelMath leftVel(okapi::imeTurboTPR), rightVel(okapi::imeTurboTPR);
@@ -24,7 +23,7 @@ void controlLoop() {
 	writeUart(0xF5, 50505);
 	float leftVal = 0, rightVal = 0;
 	bool joystickMode = true, uartMode = false;
-	leftVal = 75;
+	leftVal = 500;
 	while (1) {
 		uint8_t packet_id = 0;
 		int32_t value = 0;
@@ -50,8 +49,9 @@ void controlLoop() {
 		// imeGet(leftIME, &leftIMEVal);
 		// imeGet(rightIME, &rightIMEVal);
 		// rightIMEVal *= -1;
-		leftVel.step(leftIME.get());
-		rightVel.step(rightIME.get());
+		auto imeVals = model.getSensorVals();
+		leftVel.step(imeVals[0]);
+		rightVel.step(imeVals[1]);
 
 		//Step PID
 		left.setTarget(leftVal);
@@ -96,7 +96,7 @@ void controlLoop() {
 			// model.tank(leftPower, rightPower);
 			model.leftTS(leftPower + 127.0 * leftVal/200.0);
 			model.rightTS(rightPower + 127.0 * rightVal/200.0);
-			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),leftVal-leftVel.getOutput());
+			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),left.getError());
 		}
 
 		if (joystickGetDigital(1, 8, JOY_LEFT))
@@ -110,8 +110,8 @@ void controlLoop() {
 		}
 
 		if (uartMode) {
-			writeUart(0xF1, leftIME.get());//leftEnc.get());
-			writeUart(0xF2, rightIME.get());//rightEnc.get());
+			writeUart(0xF1, imeVals[0]);//leftEnc.get());
+			writeUart(0xF2, imeVals[1]);//rightEnc.get());
 		}
 
 		taskDelay(15);
