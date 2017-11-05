@@ -10,14 +10,16 @@
 #include "uart.h"
 
 using namespace okapi::literals;
-
+float kp = 0.025;
+float ki = 0.0;
+float kd = 0.0005;
 void controlLoop() {
 	//okapi::QuadEncoder leftEnc(1, 2, true), rightEnc(3, 4);
 	// okapi::SkidSteerModel<3> model({2_m, 3_m, 4_m, 7_m, 8_m, 9_m}, leftEnc, rightEnc);
 	const unsigned int leftIME = 0, rightIME = 1;
 	int leftIMEVal = 0, rightIMEVal = 0;
 	// okapi::Button switchMode(1, 8, JOY_DOWN), uartButton(1, 8, JOY_LEFT);
-	okapi::Pid left(0.025, 0, 0.0005), right(0.001, 0, 0);
+	okapi::Pid left(kp, ki, kd), right(kp, ki, kd);
 	okapi::VelMath leftVel(okapi::imeTurboTPR), rightVel(okapi::imeTurboTPR);
 	float leftPower = 0, rightPower = 0;
 
@@ -26,7 +28,6 @@ void controlLoop() {
 	imeReset(rightIME);
 
 	writeUart(0xF5, 50505);
-
 	float leftVal = 0, rightVal = 0;
 	bool joystickMode = true, uartMode = false;
 
@@ -38,7 +39,14 @@ void controlLoop() {
 		switch (packet_id) {
 			case 0x1: leftVal = value/360.0; break; //leftVel.setTarget(value/360.0); break;
 			case 0x2: rightVal = value/360.0; break; //rightVel.setTarget(value/360.0); break;
+			case 0x16: kp = value/65536.0; break;
+			case 0x17: ki = value/65536.0; break;
+			case 0x18: kd = value/65536.0; break;
 		}
+		left.setGains(kp,ki,kd);
+		right.setGains(kp,ki,kd);
+		printf("%1.4f %1.4f %1.4f \n",kp,ki,kd);
+
 
 		if (packet_id) {
 			printf("[0x%02x] %d\n", packet_id, value);
@@ -103,6 +111,7 @@ void controlLoop() {
 			motorSet(7, rightPower);
 			motorSet(8, rightPower);
 			motorSet(9, rightPower);
+			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),leftVal-leftVel.getOutput());
 		}
 
 		if (joystickGetDigital(1, 8, JOY_LEFT))

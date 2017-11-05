@@ -15,6 +15,7 @@ extern "C" {
 void initializeIO() {
   __libc_init_array();
   usartInit(uart1, 115200, SERIAL_DATABITS_8 | SERIAL_PARITY_NONE);
+  usartInit(uart2, 115200, SERIAL_DATABITS_8 | SERIAL_PARITY_NONE);
 }
 
 void initialize() {
