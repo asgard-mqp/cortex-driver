@@ -1,1 +1,1 @@
-{"py/object": "prosconfig.ProjectConfig", "py/state": {"kernel": "0.4.0", "libraries": {"okapilib": "0.4.0"}, "output": "bin/output.bin"}}
+{"py/object": "prosconfig.ProjectConfig", "py/state": {"kernel": "0.4.1", "libraries": {"okapilib": "0.4.1"}, "output": "bin/output.bin"}}
