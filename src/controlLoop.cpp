@@ -115,8 +115,7 @@ void controlLoop() {
 		// reset button for testing
 		if (joystickGetDigital(1, 8, JOY_RIGHT)) {
 			uartMode = false;
-			imeReset(0);
-			imeReset(1);
+			model.resetSensors();
 		}
 
 		if (uartMode) {
