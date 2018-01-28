@@ -27,6 +27,8 @@ void controlLoop() {
 	float leftVal = 0, rightVal = 0;
 	bool joystickMode = true, uartMode = false;
 	//leftVal = 50;
+	//printf("boot");
+
 	while (1) {
 		uint8_t packet_id = 0;
 		int32_t value = 0;
@@ -41,7 +43,7 @@ void controlLoop() {
 		}
 		left.setGains(kp,ki,kd);
 		right.setGains(kp,ki,kd);
-		printf("%1.4f %1.4f %1.4f \n",kp,ki,kd);
+		//printf("%1.4f %1.4f %1.4f \n",kp,ki,kd);
 
 
 		if (packet_id) {
@@ -109,9 +111,10 @@ void controlLoop() {
 			fprintf(uart2, "E%1.2f,%1.2f\n",leftVel.getOutput(),left.getError());
 		}
 
-		if (joystickGetDigital(1, 8, JOY_LEFT))
+		if (joystickGetDigital(1, 8, JOY_LEFT)){
 			uartMode = true;
-
+			printf("starting UART");
+		}
 		// reset button for testing
 		if (joystickGetDigital(1, 8, JOY_RIGHT)) {
 			uartMode = false;
